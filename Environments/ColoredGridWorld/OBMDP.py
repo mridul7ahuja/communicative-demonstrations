@@ -30,7 +30,7 @@ class OBMDP(object):
         return lambda jointState, action: {(nextObjectState, getNextBelief(jointState, action, nextObjectState)): objectTransitionFn(jointState[0], action)[nextObjectState] for nextObjectState in objectTransitionFn(jointState[0], action).keys()}
     
     """
-        Class to get the literal observer indicator function depending on the dicretization of the belief space
+        Class to get the literal observer function depending on the dicretization of the belief space
         Input: 
             __init__:
             actionInterpretation: object of class ActionInterpretation 
@@ -38,7 +38,7 @@ class OBMDP(object):
             beliefSpace: list of dictionaries of this type - {(env):probability}
             isDiscretized: boolean to indicate whether this should assume the belief space is discretized
         Output: 
-            an indicator function that takes as input jointState, action, nextJointState and returns 1 or 0 
+            an indicator function that takes as input jointState, action, nextObjectState and returns the required belief state
     """
     
 class LiteralObserver(object):
