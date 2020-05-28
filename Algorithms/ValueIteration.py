@@ -16,7 +16,7 @@ Inputs:
     transitionPdf: function that takes in state, action and returns a dictionary of nextState: probability
     rewardFunction: function that takes in state, action, nextState and returns a scalar reward
     valueTable: dictionary of initial values of all states
-    isTerminal: terminal state
+    terminalStates: list of terminalStates with their object level state as their goal state
     hyperparameters - convergenceTolerance, gamma, alpha(softmax temp.), eps(non value related randomness)
     softmax: boolean to signal softmax policy 
     
