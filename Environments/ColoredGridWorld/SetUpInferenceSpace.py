@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[4]:
 
 
 from itertools import product
@@ -14,6 +14,23 @@ import math
 
 
 # In[ ]:
+
+
+class HashableBelief(object):
+    def __init__(self, beliefDict):
+        self.beliefDict = beliefDict
+    
+    def __call__(self):
+        return self.beliefDict
+    
+    def __eq__(self, other): 
+        if not isinstance(other, HashableBelief):
+            return NotImplemented
+
+        return self.beliefDict == other.beliefDict 
+    
+    def __hash__(self):
+        return hash((frozenset(self.beliefDict.items())))
 
 
 class HashableWorld(object):
@@ -70,7 +87,7 @@ def buildEnvPolicySpace(dimensions, stateSpace, actions, envSpace, hyperparamete
     rewardFunctions = [rewardAndTransitionFunction[0] for rewardAndTransitionFunction in rewardAndTransitionFunctions]
     transitionFunctions = [rewardAndTransitionFunction[1] for rewardAndTransitionFunction in rewardAndTransitionFunctions]
     valueTable = {key: 0 for key in stateSpace.keys()}
-    ValueIterations = [ValueIteration(actions, transitionFunction, rewardFunction, valueTable, env[1], convergenceTolerance, gamma, alpha, eps, True) for rewardFunction, transitionFunction, env in zip(rewardFunctions, transitionFunctions,envSpace)]
+    ValueIterations = [ValueIteration(actions, transitionFunction, rewardFunction, valueTable, [env[1]], convergenceTolerance, gamma, alpha, eps, True) for rewardFunction, transitionFunction, env in zip(rewardFunctions, transitionFunctions,envSpace)]
     ValueAndPolicyTables = [ValueIteration() for ValueIteration in ValueIterations]
     envPolicies = [ValueAndPolicyTable[1] for ValueAndPolicyTable in ValueAndPolicyTables]
     return {(env):(MDP,policy) for env, MDP, policy in zip(envSpace, envMDPs, envPolicies)}
