@@ -14,8 +14,7 @@ from ColoredGridWorld import SetUpInferenceSpace as setUp
 
 
 class OBMDP(object):
-    def __init__(self, jointStateSpace, trueEnv, isInformativeBeliefGoal, beta):
-        self.jointStateSpace = jointStateSpace
+    def __init__(self, trueEnv, isInformativeBeliefGoal, beta):
         self.trueEnv = trueEnv
         self.isInformativeBeliefGoal = isInformativeBeliefGoal
         self.beta = beta
@@ -30,6 +29,7 @@ class OBMDP(object):
         return lambda jointState, action: {(nextObjectState, getNextBelief(jointState, action, nextObjectState)): objectTransitionFn(jointState[0], action)[nextObjectState] for nextObjectState in objectTransitionFn(jointState[0], action).keys()}
     
     """
+    
         Class to get the literal observer function depending on the dicretization of the belief space
         Input: 
             __init__:
@@ -38,7 +38,7 @@ class OBMDP(object):
             beliefSpace: list of dictionaries of this type - {(env):probability}
             isDiscretized: boolean to indicate whether this should assume the belief space is discretized
         Output: 
-            an indicator function that takes as input jointState, action, nextObjectState and returns the required belief state
+            an indicator function that takes as input jointState, action, nextObjectState and returns the next observer belief state 
     """
     
 class LiteralObserver(object):
