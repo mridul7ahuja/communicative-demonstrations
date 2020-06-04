@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[3]:
 
 
 import functools
+import sys
+sys.path.append('../Environments/')
+from ColoredGridWorld import SetUpInferenceSpace as setUp
 
 
 # In[ ]:
@@ -37,7 +40,8 @@ class ActionInterpretation(object):
         beliefStatePosterior = {env:self.getPosterior(trajectory, beliefPriors, env) for env in self.MDPsAndPolicies.keys()}
         beliefVector = self.normalizePosterior(beliefStatePosterior)
         if(vector):
-            return beliefVector
+            hashableBeliefVector = setUp.HashableBelief(beliefVector)
+            return hashableBeliefVector
         else: 
             return beliefVector[(world, goal)]  
     
@@ -46,7 +50,8 @@ class ActionInterpretation(object):
         return {env: (posterior/constant) for env, posterior in beliefStatePosterior.items()}
     
     def getPosterior(self, trajectory, beliefPriors, env):
-        return self.getLikelihood(trajectory, env)*beliefPriors[env]
+        beliefPriorDict = beliefPriors()
+        return self.getLikelihood(trajectory, env)*beliefPriorDict[env]
     
     def getLikelihood(self, trajectory, env):
         MDP, policy = self.MDPsAndPolicies[env]
