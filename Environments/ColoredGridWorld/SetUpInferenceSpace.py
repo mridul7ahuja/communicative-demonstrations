@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[1]:
 
 
 from itertools import product
@@ -108,13 +108,18 @@ def buildEnvPolicySpace(dimensions, stateSpace, actions, envSpace, hyperparamete
 
 """
 
-def buildPragmaticEnvPolicySpace(jointStateSpace, actions, envMDPsAndPolicies, getNextBelief, beliefHyperparameters):
+def buildPragmaticEnvPolicySpace(jointStateSpace, actions, envMDPsAndPolicies, getNextBelief, beliefUtilityFn, beliefHyperparameters):
     convergenceTolerance, beta, beliefGamma, beliefAlpha, beliefEps = beliefHyperparameters
-    beliefUtilityFn = OBMDP.getBeliefUtility()
+    #beliefUtilityFn = OBMDP.getBeliefUtility()
     envOrder = tuple(env for env in envMDPsAndPolicies.keys())
     envOBMDPs = [OBMDP.OBMDP(env, True, beta, envMDPsAndPolicies[env][0].transitionFunction, getNextBelief) for env in envOrder]
-    jointRewardFunctions = [OBMDP(envMDPsAndPolicies[env][0](), beliefUtilityFn) for env, OBMDP in zip(envOrder, envOBMDPs)]
-    jointTransitionDicts = [{jointState:{action:OBMDP.transitionFunction(jointState, action) for action in actions} for jointState in jointStateSpace if jointState[0]!=env[1]} for OBMDP, env in zip(envOBMDPs, envOrder)]
+    jointRewardFunctions = [OBMDp(envMDPsAndPolicies[env][0](), beliefUtilityFn) for env, OBMDp in zip(envOrder, envOBMDPs)]
+    #jointTransitionDicts = [{jointState:{action:OBMDP.transitionFunction(jointState, action) for action in actions} for jointState in jointStateSpace if jointState[0]!=env[1]} for OBMDP, env in zip(envOBMDPs, envOrder)]
+    jointTransitionDicts = []
+    for OBMDp, env in zip(envOBMDPs, envOrder):
+        jointDict = {jointState:{action:OBMDp.transitionFunction(jointState, action) for action in actions} for jointState in jointStateSpace if jointState[0]!=env[1]} 
+        jointTransitionDicts.append(jointDict)
+        print(str(env[0]()) + " transition dict done")
     jointRewardDicts = []
     for jointTransitionDict, jointRewardFn in zip(jointTransitionDicts, jointRewardFunctions):
         jointRewardDict = copy.deepcopy(jointTransitionDict)
@@ -128,7 +133,7 @@ def buildPragmaticEnvPolicySpace(jointStateSpace, actions, envMDPsAndPolicies, g
     ValueIterations = [DictValueIteration(jointTransitionDict, jointRewardDict, valueTable, jointGoalStates, convergenceTolerance, beliefGamma, beliefAlpha, beliefEps) for jointTransitionDict, jointRewardDict, jointGoalStates in zip(jointTransitionDicts, jointRewardDicts, jointGoalStatesList)]
     ValueAndPolicyTables = [ValueIteration() for ValueIteration in ValueIterations]
     envPolicies = [ValueAndPolicyTable[1] for ValueAndPolicyTable in ValueAndPolicyTables]
-    return {env:(OBMDP, policy) for env, OBMDP, policy in zip(envOrder, envOBMDPs, envPolicies)}
+    return {env:(OBMDp, policy) for env, OBMDp, policy in zip(envOrder, envOBMDPs, envPolicies)}
     
 """
     Returns list of all possible worlds

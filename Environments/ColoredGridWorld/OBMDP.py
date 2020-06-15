@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 from scipy import spatial
@@ -14,20 +14,22 @@ from ColoredGridWorld import SetUpInferenceSpace as setUp
 
 
 class OBMDP(object):
-    def __init__(self, trueEnv, isInformativeBeliefGoal, beta):
+    def __init__(self, trueEnv, isInformativeBeliefGoal, beta, objectTransitionFn, getNextBelief):
         self.trueEnv = trueEnv
         self.isInformativeBeliefGoal = isInformativeBeliefGoal
         self.beta = beta
+        self.objectTransitionFn = objectTransitionFn
+        self.getNextBelief = getNextBelief
         
-    def __call__(self,objectTransitionFn, objectRewardFn, getNextBelief, beliefUtilityFn):
-        return [self.getRewardFunction(objectRewardFn, beliefUtilityFn), self.getTransitionFunction(objectTransitionFn, getNextBelief)]
+    def __call__(self, objectRewardFn, beliefUtilityFn):
+        return self.getRewardFunction(objectRewardFn, beliefUtilityFn)
     
     def getRewardFunction(self, objectRewardFn, beliefUtilityFn):
         return lambda jointState, action, nextJointState: objectRewardFn(jointState[0], action , nextJointState[0]) + self.beta*beliefUtilityFn(jointState[1](), nextJointState[1](), self.trueEnv, self.isInformativeBeliefGoal)
         
-    def getTransitionFunction(self, objectTransitionFn, getNextBelief):
-        return lambda jointState, action: {(nextObjectState, getNextBelief(jointState, action, nextObjectState)): objectTransitionFn(jointState[0], action)[nextObjectState] for nextObjectState in objectTransitionFn(jointState[0], action).keys()}
-    
+    def transitionFunction(self, jointState, action):
+        return {(nextObjectState, self.getNextBelief(jointState, action, nextObjectState)): self.objectTransitionFn(jointState[0], action)[nextObjectState] for nextObjectState in self.objectTransitionFn(jointState[0], action).keys()}
+
     """
     
         Class to get the literal observer function depending on the dicretization of the belief space
@@ -42,21 +44,22 @@ class OBMDP(object):
     """
     
 class LiteralObserver(object):
-    def __init__(self, actionInterpretation):
+    def __init__(self, actionInterpretation, discreteBeliefSpace):
         self.actionInterpretation = actionInterpretation
+        self.discreteBeliefSpace = discreteBeliefSpace
     
-    def __call__(self, discreteBeliefSpace = [], isDiscretized = False):  
-        if(isDiscretized):
-            return lambda jointState, action, nextObjectState : (self.getNearestNeighbour(self.actionInterpretation( [jointState[0], action, nextObjectState] , jointState[1]), discreteBeliefSpace))
-        else:
-            return lambda jointState, action, nextObjectState : (self.actionInterpretation( [jointState[0], action, nextObjectState], jointState[1]))
+    def getNextDiscreteBelief(self, jointState, action, nextObjectState):
+        return (self.getNearestNeighbour(self.actionInterpretation( [jointState[0], action, nextObjectState] , jointState[1])))
+        
+    def getNextBelief(self, jointState, action, nextObjectState):
+        return (self.actionInterpretation( [jointState[0], action, nextObjectState], jointState[1]))
     
     #finds the nearest neighbour of the observer's new belief in the belief space
-    def getNearestNeighbour(self, observerNewBelief, discreteBeliefSpace):
+    def getNearestNeighbour(self, observerNewBelief):
         observerNewBeliefDict = observerNewBelief()
         envOrder = tuple(env for env in observerNewBeliefDict.keys())
         observerNewBeliefVector = [observerNewBeliefDict[env] for env in envOrder]
-        discreteBeliefSpaceVectors = [[belief[env] for env in envOrder] for belief in discreteBeliefSpace] 
+        discreteBeliefSpaceVectors = [[belief[env] for env in envOrder] for belief in self.discreteBeliefSpace] 
         tree = spatial.cKDTree(discreteBeliefSpaceVectors)
         nearestNeighbourVector = discreteBeliefSpaceVectors[ tree.query(observerNewBeliefVector)[1] ]
         nearestNeighbour = {env:probability for env, probability in zip(envOrder, nearestNeighbourVector)}

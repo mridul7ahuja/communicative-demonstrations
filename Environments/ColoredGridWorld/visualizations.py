@@ -335,8 +335,9 @@ def visualizeEnvironmentMultipleTraj(states, goalStates = [], trapStates = [], t
         title, xlabel: Title for X-axis, ylabel: Title for Y-axis
 """
     
-def plotProbAtEachStep(probAtEachStepDict, title="", xlabel = "Time Point", ylabel = "Posterior Probability"):
+def plotProbAtEachStep(probAtEachStepDict, title="", xlabel = "Time Point", ylabel = "Posterior Probability", figSize = [14,8]):
     X = [i for i in range(1,len(list(probAtEachStepDict.values())[0])+1)]
+    plt.rcParams["figure.figsize"] = figSize
     for env in probAtEachStepDict.keys():
         Y = probAtEachStepDict[env]
         plt.plot(X,Y, label = env, linestyle='dashed',marker='o', markersize=4)
